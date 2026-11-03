@@ -34,7 +34,7 @@ def get_voice():
 
 
 def verify_api_key(api_key: str | None):
-    expected_key = os.getenv("PIPER_API_KEY")
+    expected_key = (os.getenv("PIPER_API_KEY") or "").strip()
 
     if not expected_key:
         raise HTTPException(
@@ -42,7 +42,9 @@ def verify_api_key(api_key: str | None):
             detail="API key is not configured."
         )
 
-    if not api_key or not secrets.compare_digest(api_key, expected_key):
+    if not api_key or not secrets.compare_digest(
+        api_key.strip().encode(), expected_key.encode()
+    ):
         raise HTTPException(
             status_code=401,
             detail="Invalid API key."
