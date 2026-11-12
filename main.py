@@ -1,5 +1,6 @@
 import io
 import os
+import re
 import wave
 import secrets
 from pathlib import Path
@@ -35,8 +36,15 @@ def get_voice():
     return PiperVoice.load(str(MODEL_PATH))
 
 
+def clean_key(value: str | None) -> str:
+    """Keep only visible ASCII characters. This drops spaces, new lines, zero-width characters and a BOM,
+    which sneak in easily when a key is copied and pasted on a phone, plus any quotes around the key."""
+    return re.sub(r"[^\x21-\x7E]", "", value or "").strip("\"'")
+
+
 def verify_api_key(api_key: str | None):
-    expected_key = os.getenv("PIPER_API_KEY")
+    expected_key = clean_key(os.getenv("PIPER_API_KEY"))
+    api_key = clean_key(api_key)
     if not expected_key:
         raise HTTPException(
             status_code=503,
